@@ -1,0 +1,1082 @@
+<!-- =========================================================================
+  Evolution Leak Detection — "Is Your Pool Leaking?" Water Loss Calculator
+  Drop-in block for WPBakery "Raw HTML" element.
+  Self-contained: inline CSS + vanilla JS, no external dependencies, no <form>.
+  All JS/CSS is namespaced with "evo" to avoid collisions with theme/page scripts.
+========================================================================== -->
+<section class="evo-calc-wrap" id="evoCalcWrap">
+  <style>
+    #evoCalcWrap {
+      --evo-navy-900: #052a52;
+      --evo-navy-800: #074f9d;
+      --evo-navy-700: #0a63bf;
+      --evo-blue-400: #64bcea;
+      --evo-blue-100: #e4f4fc;
+      --evo-blue-50: #f3fafd;
+      --evo-ink: #152233;
+      --evo-gray-600: #5c6b7b;
+      --evo-gray-400: #8b98a6;
+      --evo-line: #dde7ef;
+      --evo-white: #ffffff;
+      --evo-green-ink: #1c7a44;
+      --evo-green-bg: #e9f8ef;
+      --evo-green-bd: #b9e6c8;
+      --evo-yellow-ink: #93650a;
+      --evo-yellow-bg: #fff6e0;
+      --evo-yellow-bd: #f3dc9e;
+      --evo-orange-ink: #a1490f;
+      --evo-orange-bg: #fff0e2;
+      --evo-orange-bd: #f2c69a;
+      --evo-red-ink: #a3241c;
+      --evo-red-bg: #fdecea;
+      --evo-red-bd: #f2b6af;
+      --evo-radius: 14px;
+      --evo-radius-sm: 9px;
+      --evo-shadow: 0 18px 45px -22px rgba(5, 42, 82, 0.35);
+
+      font-family: 'PT Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      color: var(--evo-ink);
+      max-width: 1040px;
+      margin: 0 auto;
+      padding: clamp(20px, 4vw, 48px) 16px 56px;
+      box-sizing: border-box;
+    }
+
+    #evoCalcWrap,
+    #evoCalcWrap *,
+    #evoCalcWrap *::before,
+    #evoCalcWrap *::after {
+      box-sizing: border-box;
+    }
+
+    #evoCalcWrap .evo-hidden {
+      display: none !important;
+    }
+
+    @font-face-fallback {
+      /* placeholder, Google Fonts loaded below via link */
+    }
+
+    #evoCalcWrap h2.evo-title {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 400;
+      font-size: clamp(24px, 3.4vw, 34px);
+      line-height: 1.2;
+      color: var(--evo-navy-900);
+      margin: 0 auto 10px;
+      text-align: center;
+    }
+
+    #evoCalcWrap p.evo-sub {
+      font-size: 15.5px;
+      line-height: 1.6;
+      color: var(--evo-gray-600);
+      max-width: 620px;
+      margin: 0 auto 30px;
+      text-align: center;
+    }
+
+    /* ---------- Card shell ---------- */
+    #evoCalcWrap .evo-card {
+      background: var(--evo-white);
+      border: 1px solid var(--evo-line);
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* signature water-line rule across the top of the card */
+    #evoCalcWrap .evo-waterline {
+      height: 6px;
+      width: 100%;
+      background: var(--evo-blue-400);
+    }
+
+    #evoCalcWrap .evo-card-body {
+      padding: clamp(20px, 3vw, 36px);
+    }
+
+    /* ---------- Shape toggle ---------- */
+    #evoCalcWrap .evo-field-label {
+      display: block;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 600;
+      font-size: 18px;
+      color: var(--evo-navy-900);
+      margin-bottom: 8px;
+    }
+
+    #evoCalcWrap .evo-shape-toggle {
+      display: inline-flex;
+      background: var(--evo-blue-50);
+      border: 1px solid var(--evo-line);
+      border-radius: 0;
+      padding: 4px;
+      margin-bottom: 26px;
+      gap: 4px;
+    }
+
+    #evoCalcWrap .evo-shape-btn {
+      appearance: none;
+      border: 0;
+      background: transparent;
+      cursor: pointer;
+      font-family: 'PT Sans', sans-serif;
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--evo-gray-600);
+      padding: 9px 20px;
+      border-radius: 0;
+      transition: background .18s ease, color .18s ease, box-shadow .18s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    #evoCalcWrap .evo-shape-btn svg {
+      width: 16px;
+      height: 16px;
+      opacity: .8;
+    }
+
+    #evoCalcWrap .evo-shape-btn[aria-pressed="true"] {
+      background: var(--evo-navy-800);
+      color: #fff;
+      box-shadow: 0 6px 14px -6px rgba(7, 79, 157, .55);
+    }
+
+    #evoCalcWrap .evo-shape-btn[aria-pressed="true"] svg {
+      opacity: 1;
+    }
+
+    #evoCalcWrap .evo-shape-btn:focus-visible {
+      outline: 2px solid var(--evo-navy-700);
+      outline-offset: 2px;
+    }
+
+    /* ---------- Input grid ---------- */
+    #evoCalcWrap .evo-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px 20px;
+    }
+
+    #evoCalcWrap .evo-grid.evo-grid-2 {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    #evoCalcWrap .evo-field {
+      display: flex;
+      flex-direction: column;
+    }
+
+    #evoCalcWrap .evo-field label {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--evo-navy-900);
+      margin-bottom: 6px;
+    }
+
+    #evoCalcWrap .evo-optional-tag {
+      font-weight: 500;
+      color: var(--evo-gray-400);
+      text-transform: none;
+      letter-spacing: 0;
+    }
+
+    #evoCalcWrap .evo-input-wrap {
+      position: relative;
+    }
+
+    #evoCalcWrap .evo-input-wrap .evo-suffix {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 13px;
+      color: var(--evo-gray-400);
+      pointer-events: none;
+      font-weight: 500;
+    }
+
+    #evoCalcWrap .evo-input-wrap .evo-prefix {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 14px;
+      color: var(--evo-gray-400);
+      pointer-events: none;
+      font-weight: 500;
+    }
+
+    #evoCalcWrap input.evo-input {
+      width: 100%;
+      font-family: 'PT Sans', sans-serif;
+      font-size: 15px;
+      color: var(--evo-ink);
+      background: #fbfdfe;
+      border: 1.5px solid var(--evo-line);
+      border-radius: 0;
+      padding: 12px 14px;
+      transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+    }
+
+    #evoCalcWrap input.evo-input.evo-has-suffix {
+      padding-right: 44px;
+    }
+
+    #evoCalcWrap input.evo-input.evo-has-prefix {
+      padding-left: 30px;
+    }
+
+    #evoCalcWrap input.evo-input::placeholder {
+      color: var(--evo-gray-400);
+    }
+
+    #evoCalcWrap input.evo-input:hover {
+      border-color: var(--evo-blue-400);
+    }
+
+    #evoCalcWrap input.evo-input:focus {
+      outline: none;
+      border-color: var(--evo-navy-700);
+      background: #fff;
+      box-shadow: 0 0 0 4px rgba(100, 188, 234, .28);
+    }
+
+    #evoCalcWrap input.evo-input:focus-visible {
+      outline: 2px solid var(--evo-navy-700);
+      outline-offset: 1px;
+    }
+
+    #evoCalcWrap input.evo-input.evo-input-error {
+      border-color: var(--evo-red-ink);
+      background: var(--evo-red-bg);
+    }
+
+    #evoCalcWrap .evo-error-msg {
+      font-size: 12.5px;
+      color: var(--evo-red-ink);
+      margin-top: 5px;
+      display: none;
+      font-weight: 500;
+    }
+
+    #evoCalcWrap .evo-error-msg.evo-show {
+      display: block;
+    }
+
+    #evoCalcWrap .evo-help {
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+      margin-top: 9px;
+      font-size: 14px;
+      line-height: 1.5;
+      color: var(--evo-gray-600);
+    }
+
+    #evoCalcWrap .evo-help svg {
+      width: 16px;
+      height: 16px;
+      flex: none;
+      margin-top: 1px;
+      color: var(--evo-navy-700);
+    }
+
+    #evoCalcWrap .evo-help a {
+      color: var(--evo-navy-700);
+      font-weight: 600;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+
+    #evoCalcWrap .evo-help a:hover {
+      color: var(--evo-blue-400);
+    }
+
+    #evoCalcWrap .evo-divider {
+      height: 1px;
+      background: var(--evo-line);
+      margin: 28px 0;
+      border: 0;
+    }
+
+    #evoCalcWrap .evo-subheading {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 600;
+      font-size: 18px;
+      color: var(--evo-navy-900);
+      margin: 0 0 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    #evoCalcWrap .evo-subheading svg {
+      width: 17px;
+      height: 17px;
+      color: var(--evo-navy-700);
+    }
+
+    /* ---------- Results ---------- */
+    #evoCalcWrap .evo-results-section {
+      margin-top: 32px;
+    }
+
+    #evoCalcWrap .evo-empty-state {
+      text-align: center;
+      color: var(--evo-gray-400);
+      font-size: 16px;
+      padding: 38px 20px;
+      border: 1.5px dashed var(--evo-line);
+      border-radius: var(--evo-radius-sm);
+      background: var(--evo-blue-50);
+    }
+
+    #evoCalcWrap .evo-empty-state svg {
+      width: 30px;
+      height: 30px;
+      margin-bottom: 10px;
+      color: var(--evo-blue-400);
+    }
+
+    #evoCalcWrap .evo-empty-heading {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 600;
+      font-size: 20px;
+      color: var(--evo-navy-900);
+      margin: 0 0 6px;
+    }
+
+    #evoCalcWrap .evo-results-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    #evoCalcWrap .evo-result-card {
+      background: var(--evo-blue-50);
+      border: 1px solid var(--evo-line);
+      border-radius: var(--evo-radius-sm);
+      padding: 16px 14px;
+      text-align: left;
+    }
+
+    #evoCalcWrap .evo-result-card.evo-primary {
+      background: linear-gradient(150deg, var(--evo-navy-800), var(--evo-navy-900));
+      border-color: var(--evo-navy-900);
+      color: #fff;
+      grid-column: span 1;
+      box-shadow: 0 14px 30px -16px rgba(7, 79, 157, .6);
+    }
+
+    #evoCalcWrap .evo-result-label {
+      font-size: 11.5px;
+      font-weight: 700;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: var(--evo-gray-600);
+      margin-bottom: 8px;
+    }
+
+    #evoCalcWrap .evo-result-card.evo-primary .evo-result-label {
+      color: var(--evo-blue-400);
+    }
+
+    #evoCalcWrap .evo-result-value {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 600;
+      font-size: 22px;
+      color: var(--evo-navy-900);
+      line-height: 1.15;
+    }
+
+    #evoCalcWrap .evo-result-card.evo-primary .evo-result-value {
+      color: #fff;
+      font-size: 26px;
+    }
+
+    #evoCalcWrap .evo-result-unit {
+      font-size: 12.5px;
+      font-weight: 500;
+      color: var(--evo-gray-600);
+      margin-left: 4px;
+    }
+
+    #evoCalcWrap .evo-result-card.evo-primary .evo-result-unit {
+      color: rgba(255, 255, 255, .75);
+    }
+
+    #evoCalcWrap .evo-cost-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      background: var(--evo-navy-900);
+      border: 1.5px solid var(--evo-blue-400);
+      border-radius: var(--evo-radius-sm);
+      padding: 16px 18px;
+      margin-bottom: 22px;
+    }
+
+    #evoCalcWrap .evo-cost-card .evo-cost-label {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 16px;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    #evoCalcWrap .evo-cost-card .evo-cost-sub {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.7);
+      margin-top: 2px;
+    }
+
+    #evoCalcWrap .evo-cost-value {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 700;
+      font-size: 28px;
+      color: var(--evo-blue-400);
+      white-space: nowrap;
+    }
+
+    /* ---------- Verdict + meter (signature element) ---------- */
+    #evoCalcWrap .evo-verdict {
+      border-radius: var(--evo-radius-sm);
+      border: 1.5px solid var(--evo-line);
+      padding: 18px 20px 20px;
+      margin-bottom: 22px;
+      transition: background .2s ease, border-color .2s ease;
+    }
+
+    #evoCalcWrap .evo-verdict-top {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    #evoCalcWrap .evo-verdict-dot {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      flex: none;
+    }
+
+    #evoCalcWrap .evo-verdict-title {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 600;
+      font-size: 15px;
+    }
+
+    #evoCalcWrap .evo-verdict-msg {
+      font-size: 14px;
+      line-height: 1.55;
+      margin: 0 0 16px;
+    }
+
+    #evoCalcWrap .evo-meter {
+      position: relative;
+      height: 10px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #3fbf72 0 22%, #f0c33d 22% 45%, #ef8b3c 45% 68%, #e5473c 68% 100%);
+    }
+
+    #evoCalcWrap .evo-meter-marker {
+      position: absolute;
+      top: 50%;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #fff;
+      border: 3px solid var(--evo-navy-900);
+      transform: translate(-50%, -50%);
+      left: 0%;
+      box-shadow: 0 2px 6px rgba(5, 42, 82, .4);
+      transition: left .35s cubic-bezier(.4, 0, .2, 1);
+    }
+
+    #evoCalcWrap .evo-meter-scale {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10.5px;
+      color: var(--evo-gray-400);
+      margin-top: 9px;
+      font-weight: 600;
+    }
+
+    /* ---------- CTA ---------- */
+    #evoCalcWrap .evo-cta-heading {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 600;
+      font-size: 22px;
+      color: var(--evo-navy-700);
+      margin: 0 0 8px;
+    }
+
+    #evoCalcWrap .evo-cta-block {
+      text-align: center;
+      padding-top: 24px;
+    }
+
+    #evoCalcWrap .evo-cta-btn-box {
+      margin-top: 20px;
+    }
+
+    #evoCalcWrap .evo-cta-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      text-decoration: none;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 600;
+      font-size: 15.5px;
+      color: #fff;
+      background: var(--evo-blue-400);
+      border: 0;
+      border-radius: 0;
+      padding: 14px 34px;
+      cursor: pointer;
+      transition: background .18s ease, transform .12s ease;
+    }
+
+    #evoCalcWrap .evo-cta-btn:hover {
+      background: var(--evo-navy-700);
+      transform: translateY(-1px);
+    }
+
+    #evoCalcWrap .evo-cta-btn:focus-visible {
+      outline: 2px solid var(--evo-navy-900);
+      outline-offset: 3px;
+    }
+
+    #evoCalcWrap .evo-cta-btn svg {
+      width: 17px;
+      height: 17px;
+    }
+
+    #evoCalcWrap .evo-map-box {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 50px;
+      height: 50px;
+      background-color: var(--evo-blue-400);
+      border-radius: 9999px;
+      color: #fff;
+      margin: 0 auto;
+
+    }
+
+    #evoCalcWrap .evo-cta-sub {
+      font-family: 'Montserrat', sans-serif;
+      margin: 8px 0 4px;
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--evo-navy-900);
+    }
+
+    #evoCalcWrap .evo-cta-phone {
+      font-family: 'Montserrat', sans-serif;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 20px;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--evo-navy-900);
+      text-decoration: none;
+    }
+
+    #evoCalcWrap .evo-cta-phone:hover {
+      color: var(--evo-blue-400);
+    }
+
+    /* ---------- Responsive ---------- */
+    @media (max-width: 1024px) {
+      #evoCalcWrap .evo-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      #evoCalcWrap .evo-results-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 767px) {
+      #evoCalcWrap .evo-grid {
+        grid-template-columns: 1fr;
+      }
+
+      #evoCalcWrap .evo-grid.evo-grid-2 {
+        grid-template-columns: 1fr;
+      }
+
+      #evoCalcWrap .evo-results-grid {
+        grid-template-columns: 1fr;
+      }
+
+      #evoCalcWrap .evo-cost-card {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      #evoCalcWrap .evo-shape-toggle {
+        width: 100%;
+      }
+
+      #evoCalcWrap .evo-shape-btn {
+        flex: 1;
+        justify-content: center;
+      }
+    }
+  </style>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&family=PT+Sans:wght@400;700&display=swap">
+
+  <h2 class="evo-title">Is Your Pool Leaking?</h2>
+  <p class="evo-sub">Enter your pool's dimensions and how much water it's losing to estimate your daily gallons lost,
+    monthly cost, and whether it's likely a leak.</p>
+
+  <div class="evo-card">
+    <div class="evo-waterline" aria-hidden="true"></div>
+    <div class="evo-card-body">
+
+      <!-- Shape toggle -->
+      <span class="evo-field-label">Pool Shape</span>
+      <div class="evo-shape-toggle" role="group" aria-label="Pool shape">
+        <button type="button" class="evo-shape-btn" id="evoShapeRectBtn" aria-pressed="true"
+          onclick="evoSetShape('rect')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="6" width="18" height="12" rx="1.5" />
+          </svg>
+          Rectangular
+        </button>
+        <button type="button" class="evo-shape-btn" id="evoShapeCircleBtn" aria-pressed="false"
+          onclick="evoSetShape('circle')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="9" />
+          </svg>
+          Circular / Round
+        </button>
+      </div>
+
+      <!-- Rectangular fields -->
+      <div class="evo-grid" id="evoRectFields">
+        <div class="evo-field">
+          <label for="evoLength">Length</label>
+          <div class="evo-input-wrap">
+            <input type="number" inputmode="decimal" min="0" step="0.1" id="evoLength" class="evo-input evo-has-suffix"
+              placeholder="e.g. 32" oninput="evoHandleInput()">
+            <span class="evo-suffix">ft</span>
+          </div>
+          <span class="evo-error-msg" id="evoLengthErr">Enter a length greater than 0.</span>
+        </div>
+        <div class="evo-field">
+          <label for="evoWidth">Width</label>
+          <div class="evo-input-wrap">
+            <input type="number" inputmode="decimal" min="0" step="0.1" id="evoWidth" class="evo-input evo-has-suffix"
+              placeholder="e.g. 16" oninput="evoHandleInput()">
+            <span class="evo-suffix">ft</span>
+          </div>
+          <span class="evo-error-msg" id="evoWidthErr">Enter a width greater than 0.</span>
+        </div>
+        <div class="evo-field">
+          <label for="evoDepthRect">Average Depth</label>
+          <div class="evo-input-wrap">
+            <input type="number" inputmode="decimal" min="0" step="0.1" id="evoDepthRect"
+              class="evo-input evo-has-suffix" placeholder="e.g. 5" oninput="evoHandleInput()">
+            <span class="evo-suffix">ft</span>
+          </div>
+          <span class="evo-error-msg" id="evoDepthRectErr">Enter a depth greater than 0.</span>
+        </div>
+      </div>
+
+      <!-- Circular fields -->
+      <div class="evo-grid evo-grid-2 evo-hidden" id="evoCircleFields">
+        <div class="evo-field">
+          <label for="evoDiameter">Diameter</label>
+          <div class="evo-input-wrap">
+            <input type="number" inputmode="decimal" min="0" step="0.1" id="evoDiameter"
+              class="evo-input evo-has-suffix" placeholder="e.g. 24" oninput="evoHandleInput()">
+            <span class="evo-suffix">ft</span>
+          </div>
+          <span class="evo-error-msg" id="evoDiameterErr">Enter a diameter greater than 0.</span>
+        </div>
+        <div class="evo-field">
+          <label for="evoDepthCircle">Average Depth</label>
+          <div class="evo-input-wrap">
+            <input type="number" inputmode="decimal" min="0" step="0.1" id="evoDepthCircle"
+              class="evo-input evo-has-suffix" placeholder="e.g. 5" oninput="evoHandleInput()">
+            <span class="evo-suffix">ft</span>
+          </div>
+          <span class="evo-error-msg" id="evoDepthCircleErr">Enter a depth greater than 0.</span>
+        </div>
+      </div>
+
+      <hr class="evo-divider">
+
+      <p class="evo-subheading">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 3s7 7.2 7 12a7 7 0 1 1-14 0c0-4.8 7-12 7-12Z" />
+        </svg>
+        Water Loss
+      </p>
+      <div class="evo-grid evo-grid-2">
+        <div class="evo-field">
+          <label for="evoInchesLost">Inches Lost in 24 Hours</label>
+          <div class="evo-input-wrap">
+            <input type="number" inputmode="decimal" min="0" step="0.01" id="evoInchesLost"
+              class="evo-input evo-has-suffix" placeholder="e.g. 0.5" oninput="evoHandleInput()">
+            <span class="evo-suffix">in</span>
+          </div>
+          <span class="evo-error-msg" id="evoInchesLostErr">Enter a value of 0 or more.</span>
+          <div class="evo-help">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="9" />
+              <path d="M12 11v5M12 8h.01" stroke-linecap="round" />
+            </svg>
+            <span>Not sure how much water you're losing? <a href="https://evolutionleakdetection.com/pool-bucket-test/"
+                target="_blank" rel="noopener">Perform the bucket test</a> to get an accurate measurement before
+              entering a number here.</span>
+          </div>
+        </div>
+        <div class="evo-field">
+          <label for="evoWaterTemp">Avg Water Temp <span class="evo-optional-tag">(optional)</span></label>
+          <div class="evo-input-wrap">
+            <input type="number" inputmode="decimal" step="1" id="evoWaterTemp" class="evo-input evo-has-suffix"
+              placeholder="e.g. 84" oninput="evoHandleInput()">
+            <span class="evo-suffix">°F</span>
+          </div>
+          <span class="evo-error-msg" id="evoWaterTempErr">Enter a realistic temperature (32–120°F).</span>
+          <div class="evo-help"><span>°F — refines the evaporation estimate used in your verdict.</span></div>
+        </div>
+      </div>
+
+      <hr class="evo-divider">
+
+      <p class="evo-subheading">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H7" />
+        </svg>
+        Water Cost
+      </p>
+      <div class="evo-grid evo-grid-2">
+        <div class="evo-field">
+          <label for="evoRate">Rate per 1,000 Gallons</label>
+          <div class="evo-input-wrap">
+            <span class="evo-prefix">$</span>
+            <input type="number" inputmode="decimal" min="0" step="0.01" id="evoRate" class="evo-input evo-has-prefix"
+              value="5.50" oninput="evoHandleInput()">
+          </div>
+          <span class="evo-error-msg" id="evoRateErr">Enter a rate of 0 or more.</span>
+          <div class="evo-help"><span>Pre-filled with the DFW average — adjust to match your local utility rate.</span>
+          </div>
+        </div>
+      </div>
+
+
+
+      <!-- Results -->
+      <div class="evo-results-section">
+        <div class="evo-empty-state" id="evoEmptyState">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M12 2s7 7.2 7 12a7 7 0 1 1-14 0c0-4.8 7-12 7-12Z" />
+          </svg>
+          <h3 class="evo-empty-heading">Ready to see your results?</h3>
+          <div>Enter your pool dimensions and daily water loss to see your results.</div>
+        </div>
+
+        <div id="evoResultsContent" class="evo-hidden">
+          <div class="evo-results-grid">
+            <div class="evo-result-card evo-primary">
+              <div class="evo-result-label">Per Day</div>
+              <div class="evo-result-value"><span id="evoOutDay">–</span><span class="evo-result-unit">gal</span></div>
+            </div>
+            <div class="evo-result-card">
+              <div class="evo-result-label">Per Hour</div>
+              <div class="evo-result-value"><span id="evoOutHour">–</span><span class="evo-result-unit">gal</span></div>
+            </div>
+            <div class="evo-result-card">
+              <div class="evo-result-label">Per Minute</div>
+              <div class="evo-result-value"><span id="evoOutMinute">–</span><span class="evo-result-unit">gal</span>
+              </div>
+            </div>
+            <div class="evo-result-card">
+              <div class="evo-result-label">Per Month (est.)</div>
+              <div class="evo-result-value"><span id="evoOutMonth">–</span><span class="evo-result-unit">gal</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="evo-cost-card">
+            <div>
+              <div class="evo-cost-label">Estimated Monthly Water Waste Cost</div>
+              <div class="evo-cost-sub">Based on your entered rate per 1,000 gallons</div>
+            </div>
+            <div class="evo-cost-value" id="evoOutCost">$0.00</div>
+          </div>
+
+          <div class="evo-verdict" id="evoVerdict">
+            <div class="evo-verdict-top">
+              <span class="evo-verdict-dot" id="evoVerdictDot"></span>
+              <span class="evo-verdict-title" id="evoVerdictTitle">—</span>
+            </div>
+            <p class="evo-verdict-msg" id="evoVerdictMsg">—</p>
+            <div class="evo-meter" aria-hidden="true">
+              <div class="evo-meter-marker" id="evoMeterMarker"></div>
+            </div>
+            <div class="evo-meter-scale">
+              <span>Normal</span><span>Monitor</span><span>Likely Leak</span><span>Significant</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="evo-divider" aria-hidden="true" style="margin-bottom:22px;"></div>
+
+      <div class="evo-cta-block">
+        <div class="evo-area-box">
+          <div class="evo-map-box">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M5 14.2864C3.14864 15.1031 2 16.2412 2 17.5C2 19.9853 6.47715 22 12 22C17.5228 22 22 19.9853 22 17.5C22 16.2412 20.8514 15.1031 19 14.2864M18 8C18 12.0637 13.5 14 12 17C10.5 14 6 12.0637 6 8C6 4.68629 8.68629 2 12 2C15.3137 2 18 4.68629 18 8ZM13 8C13 8.55228 12.5523 9 12 9C11.4477 9 11 8.55228 11 8C11 7.44772 11.4477 7 12 7C12.5523 7 13 7.44772 13 8Z"
+                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </div>
+          <p class="evo-cta-sub">Proudly Serving McKinney, Frisco, Allen, Plano, and the Greater DFW Area</p>
+        </div>
+        <a href="tel:+14695344560" class="evo-cta-phone">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            xmlns="http://www.w3.org/2000/svg">
+            <path
+              d="M14.0497 6C15.0264 6.19057 15.924 6.66826 16.6277 7.37194C17.3314 8.07561 17.8091 8.97326 17.9997 9.95M14.0497 2C16.0789 2.22544 17.9713 3.13417 19.4159 4.57701C20.8606 6.01984 21.7717 7.91101 21.9997 9.94M10.2266 13.8631C9.02506 12.6615 8.07627 11.3028 7.38028 9.85323C7.32041 9.72854 7.29048 9.66619 7.26748 9.5873C7.18576 9.30695 7.24446 8.96269 7.41447 8.72526C7.46231 8.65845 7.51947 8.60129 7.63378 8.48698C7.98338 8.13737 8.15819 7.96257 8.27247 7.78679C8.70347 7.1239 8.70347 6.26932 8.27247 5.60643C8.15819 5.43065 7.98338 5.25585 7.63378 4.90624L7.43891 4.71137C6.90747 4.17993 6.64174 3.91421 6.35636 3.76987C5.7888 3.4828 5.11854 3.4828 4.55098 3.76987C4.2656 3.91421 3.99987 4.17993 3.46843 4.71137L3.3108 4.86901C2.78117 5.39863 2.51636 5.66344 2.31411 6.02348C2.08969 6.42298 1.92833 7.04347 1.9297 7.5017C1.93092 7.91464 2.01103 8.19687 2.17124 8.76131C3.03221 11.7947 4.65668 14.6571 7.04466 17.045C9.43264 19.433 12.295 21.0575 15.3284 21.9185C15.8928 22.0787 16.1751 22.1588 16.588 22.16C17.0462 22.1614 17.6667 22 18.0662 21.7756C18.4263 21.5733 18.6911 21.3085 19.2207 20.7789L19.3783 20.6213C19.9098 20.0898 20.1755 19.8241 20.3198 19.5387C20.6069 18.9712 20.6069 18.3009 20.3198 17.7333C20.1755 17.448 19.9098 17.1822 19.3783 16.6508L19.1835 16.4559C18.8339 16.1063 18.6591 15.9315 18.4833 15.8172C17.8204 15.3862 16.9658 15.3862 16.3029 15.8172C16.1271 15.9315 15.9523 16.1063 15.6027 16.4559C15.4884 16.5702 15.4313 16.6274 15.3644 16.6752C15.127 16.8453 14.7828 16.904 14.5024 16.8222C14.4235 16.7992 14.3612 16.7693 14.2365 16.7094C12.7869 16.0134 11.4282 15.0646 10.2266 13.8631Z"
+              stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+
+          (469) 534-4560
+        </a>
+        <div class="evo-cta-btn-box">
+          <a href="/contact" class="evo-cta-btn" id="evoCtaBtn">
+            Schedule a Leak Inspection
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<script>
+  (function () {
+    "use strict";
+
+    var evoState = { shape: "rect" };
+
+    window.evoSetShape = function (shape) {
+      evoState.shape = shape;
+      var rectBtn = document.getElementById('evoShapeRectBtn');
+      var circleBtn = document.getElementById('evoShapeCircleBtn');
+      var rectFields = document.getElementById('evoRectFields');
+      var circleFields = document.getElementById('evoCircleFields');
+
+      if (shape === 'rect') {
+        rectBtn.setAttribute('aria-pressed', 'true');
+        circleBtn.setAttribute('aria-pressed', 'false');
+        rectFields.classList.remove('evo-hidden');
+        circleFields.classList.add('evo-hidden');
+      } else {
+        rectBtn.setAttribute('aria-pressed', 'false');
+        circleBtn.setAttribute('aria-pressed', 'true');
+        rectFields.classList.add('evo-hidden');
+        circleFields.classList.remove('evo-hidden');
+      }
+      window.evoHandleInput();
+    };
+
+    function evoGetVal(id) {
+      var el = document.getElementById(id);
+      if (!el) return NaN;
+      var v = el.value.trim();
+      if (v === '') return NaN;
+      return parseFloat(v);
+    }
+
+    function evoSetError(fieldId, errId, show) {
+      var field = document.getElementById(fieldId);
+      var err = document.getElementById(errId);
+      if (!field || !err) return;
+      if (show) {
+        field.classList.add('evo-input-error');
+        err.classList.add('evo-show');
+      } else {
+        field.classList.remove('evo-input-error');
+        err.classList.remove('evo-show');
+      }
+    }
+
+    function evoFormatNum(n, decimals) {
+      if (!isFinite(n)) return '–';
+      return n.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+    }
+
+    function evoFormatCurrency(n) {
+      if (!isFinite(n)) return '$0.00';
+      return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    window.evoHandleInput = function () {
+      var hasBlockingError = false;
+      var dimensionsComplete = false;
+      var surfaceArea = 0;
+
+      // --- Validate & compute surface area based on shape ---
+      if (evoState.shape === 'rect') {
+        var length = evoGetVal('evoLength');
+        var width = evoGetVal('evoWidth');
+        var depth = evoGetVal('evoDepthRect');
+
+        var lengthTouched = document.getElementById('evoLength').value.trim() !== '';
+        var widthTouched = document.getElementById('evoWidth').value.trim() !== '';
+        var depthTouched = document.getElementById('evoDepthRect').value.trim() !== '';
+
+        var lengthInvalid = lengthTouched && (isNaN(length) || length <= 0);
+        var widthInvalid = widthTouched && (isNaN(width) || width <= 0);
+        var depthInvalid = depthTouched && (isNaN(depth) || depth <= 0);
+
+        evoSetError('evoLength', 'evoLengthErr', lengthInvalid);
+        evoSetError('evoWidth', 'evoWidthErr', widthInvalid);
+        evoSetError('evoDepthRect', 'evoDepthRectErr', depthInvalid);
+
+        if (lengthInvalid || widthInvalid || depthInvalid) hasBlockingError = true;
+
+        if (!isNaN(length) && !isNaN(width) && !isNaN(depth) && length > 0 && width > 0 && depth > 0) {
+          surfaceArea = length * width;
+          dimensionsComplete = true;
+        }
+      } else {
+        var diameter = evoGetVal('evoDiameter');
+        var depthC = evoGetVal('evoDepthCircle');
+
+        var diameterTouched = document.getElementById('evoDiameter').value.trim() !== '';
+        var depthCTouched = document.getElementById('evoDepthCircle').value.trim() !== '';
+
+        var diameterInvalid = diameterTouched && (isNaN(diameter) || diameter <= 0);
+        var depthCInvalid = depthCTouched && (isNaN(depthC) || depthC <= 0);
+
+        evoSetError('evoDiameter', 'evoDiameterErr', diameterInvalid);
+        evoSetError('evoDepthCircle', 'evoDepthCircleErr', depthCInvalid);
+
+        if (diameterInvalid || depthCInvalid) hasBlockingError = true;
+
+        if (!isNaN(diameter) && !isNaN(depthC) && diameter > 0 && depthC > 0) {
+          surfaceArea = Math.PI * Math.pow(diameter / 2, 2);
+          dimensionsComplete = true;
+        }
+      }
+
+      // --- Validate water loss (inches lost, required) ---
+      var inchesLostRaw = document.getElementById('evoInchesLost').value.trim();
+      var inchesLostTouched = inchesLostRaw !== '';
+      var inchesLost = evoGetVal('evoInchesLost');
+      var inchesLostInvalid = inchesLostTouched && (isNaN(inchesLost) || inchesLost < 0);
+      evoSetError('evoInchesLost', 'evoInchesLostErr', inchesLostInvalid);
+      if (inchesLostInvalid) hasBlockingError = true;
+      var inchesLostComplete = inchesLostTouched && !inchesLostInvalid;
+
+      // --- Validate optional water temp ---
+      var waterTempRaw = document.getElementById('evoWaterTemp').value.trim();
+      var waterTemp = evoGetVal('evoWaterTemp');
+      var waterTempInvalid = waterTempRaw !== '' && (isNaN(waterTemp) || waterTemp < 32 || waterTemp > 120);
+      evoSetError('evoWaterTemp', 'evoWaterTempErr', waterTempInvalid);
+      if (waterTempInvalid) hasBlockingError = true;
+
+      // --- Validate rate ---
+      var rate = evoGetVal('evoRate');
+      var rateRaw = document.getElementById('evoRate').value.trim();
+      var rateInvalid = rateRaw !== '' && (isNaN(rate) || rate < 0);
+      evoSetError('evoRate', 'evoRateErr', rateInvalid);
+      if (rateInvalid) hasBlockingError = true;
+      if (isNaN(rate) || rate < 0) rate = 0;
+
+      var emptyState = document.getElementById('evoEmptyState');
+      var resultsContent = document.getElementById('evoResultsContent');
+
+      // Only render results once dimensions + water loss are complete and valid
+      if (hasBlockingError || !dimensionsComplete || !inchesLostComplete) {
+        emptyState.classList.remove('evo-hidden');
+        resultsContent.classList.add('evo-hidden');
+        return;
+      }
+
+      emptyState.classList.add('evo-hidden');
+      resultsContent.classList.remove('evo-hidden');
+
+      // --- Core calculations ---
+      var feetLostPerDay = inchesLost / 12;
+      var gallonsPerDay = feetLostPerDay * surfaceArea * 7.48;
+      var gallonsPerHour = gallonsPerDay / 24;
+      var gallonsPerMinute = gallonsPerDay / 1440;
+      var gallonsPerMonth = gallonsPerDay * 30;
+      var monthlyCost = (gallonsPerMonth / 1000) * rate;
+
+      document.getElementById('evoOutDay').textContent = evoFormatNum(gallonsPerDay, 1);
+      document.getElementById('evoOutHour').textContent = evoFormatNum(gallonsPerHour, 2);
+      document.getElementById('evoOutMinute').textContent = evoFormatNum(gallonsPerMinute, 3);
+      document.getElementById('evoOutMonth').textContent = evoFormatNum(gallonsPerMonth, 0);
+      document.getElementById('evoOutCost').textContent = evoFormatCurrency(monthlyCost);
+
+      // --- Verdict logic (based on raw inches lost per day) ---
+      var verdict = document.getElementById('evoVerdict');
+      var dot = document.getElementById('evoVerdictDot');
+      var title = document.getElementById('evoVerdictTitle');
+      var msg = document.getElementById('evoVerdictMsg');
+      var marker = document.getElementById('evoMeterMarker');
+
+      var tier;
+      if (inchesLost <= 0.10) {
+        tier = { key: 'green', title: 'Looks Normal', msg: "This is within normal evaporation range. Keep an eye on it over the next week.", ink: '--evo-green-ink', bg: '--evo-green-bg', bd: '--evo-green-bd' };
+      } else if (inchesLost <= 0.25) {
+        tier = { key: 'yellow', title: 'Worth Monitoring', msg: "This may be normal, especially in summer heat in DFW. Monitor it for a few days before calling.", ink: '--evo-yellow-ink', bg: '--evo-yellow-bg', bd: '--evo-yellow-bd' };
+      } else if (inchesLost <= 0.50) {
+        tier = { key: 'orange', title: 'Likely a Leak', msg: "This exceeds normal evaporation. Your pool may have a leak. A professional inspection is recommended.", ink: '--evo-orange-ink', bg: '--evo-orange-bg', bd: '--evo-orange-bd' };
+      } else {
+        tier = { key: 'red', title: 'Significant Water Loss', msg: "This is significant water loss. Your pool very likely has a leak. Schedule an inspection as soon as possible.", ink: '--evo-red-ink', bg: '--evo-red-bg', bd: '--evo-red-bd' };
+      }
+
+      var cs = getComputedStyle(document.getElementById('evoCalcWrap'));
+      verdict.style.background = cs.getPropertyValue(tier.bg).trim();
+      verdict.style.borderColor = cs.getPropertyValue(tier.bd).trim();
+      title.style.color = cs.getPropertyValue(tier.ink).trim();
+      msg.style.color = cs.getPropertyValue(tier.ink).trim();
+      dot.style.background = cs.getPropertyValue(tier.ink).trim();
+      title.textContent = tier.title;
+      msg.textContent = tier.msg;
+
+      // Position the meter marker: clamp display range 0 -> 0.65 in/day across 0%-100%
+      var meterMax = 0.65;
+      var pct = Math.max(0, Math.min(inchesLost, meterMax)) / meterMax * 100;
+      marker.style.left = pct + '%';
+
+      // Optional: informational-only leak-adjusted figure (evaporation baseline), not displayed as a separate output per spec
+      var evapBaseline = 0.15;
+      if (!isNaN(waterTemp) && waterTemp > 100) { evapBaseline = 0.25; }
+      else if (!isNaN(waterTemp) && waterTemp > 90) { evapBaseline = 0.20; }
+      var likelyLeakLoss = Math.max(0, inchesLost - evapBaseline);
+      // likelyLeakLoss is computed per spec for potential future use / debugging; verdict itself uses raw inchesLost.
+    };
+
+    // Initialize on load
+    document.addEventListener('DOMContentLoaded', function () {
+      window.evoHandleInput();
+    });
+    // In case script executes after DOMContentLoaded already fired (common in WPBakery raw HTML blocks)
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+      window.evoHandleInput();
+    }
+  })();
+</script>
